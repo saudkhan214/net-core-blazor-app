@@ -1,0 +1,82 @@
+﻿@page "/orderdetail/{order_id}"
+@using BlazorNetCore.Shared
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="row mt-5">
+    <div class="col-md-10 m-auto">
+        @if (error != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @error
+            </div>
+        }
+        <div class="card">
+            <div class="card-body">
+                @if (Order == null)
+                {
+                    <h5>Loading...</h5>
+                }
+                else
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>OrdersID</th>
+                                <th>OrderStatus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Order)
+                            {
+                                <tr>
+                                    <td>@item.OrderID</td>
+                                    <td>@item.OrderStatus</td>
+                                </tr>
+                            }
+                            @if (Order.Count() == 0)
+                            {
+
+                                <tr>
+                                    <td>
+                                        Not Found
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string order_id { get; set; }
+    private List<OrderModel>? Order;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"api/order/Search/{order_id}");
+            var content = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                Order = JsonSerializer.Deserialize<List<OrderModel>>(content);
+            }
+            else
+            {
+                error = response.ReasonPhrase;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        //Order = await Http.GetFromJsonAsync<List<OrderModel>>("api/order");
+    }
+}
